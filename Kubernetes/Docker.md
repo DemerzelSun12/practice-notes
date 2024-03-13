@@ -22,7 +22,7 @@
 4. ReplicaSet检查数据库变化，创建期望数量的pod实例。
 5. Scheduler再次检查数据库变化，发现尚未被分配到具体执行节点(node)的Pod，然后根据一组相关规则将pod分配到可以运行它们的节点上，并更新数据库，记录pod分配情况。
 6. Kubelete监控数据库变化，管理后续pod的生命周期，发现被分配到它所在的节点上运行的那些pod。如果找到新pod，则会在该节点上运行这个新pod。
-7. kuberproxy运行在集群各个主机上，管理网络通信，如服务发现、负载均衡。例如当有数据发送到主机时，将其路由到正确的pod或容器。对于从主机上发出的数据，它可以基于请求地址发现远程服务器，并将数据正确路由，在某些情况下会使用轮训调度算法(Round-robin)将请求发送到集群中的多个实例。
+7. kuber proxy运行在集群各个主机上，管理网络通信，如服务发现、负载均衡。例如当有数据发送到主机时，将其路由到正确的pod或容器。对于从主机上发出的数据，它可以基于请求地址发现远程服务器，并将数据正确路由，在某些情况下会使用轮训调度算法(Round-robin)将请求发送到集群中的多个实例。
 8. kubectl提交一个请求，来创建RC，此时Controller Manager通过API server里的接口监听到这个RC事件，分析之后，发现当前集群中还没有它对应的Pod实例，于是根据RC里的Pod模板定义Pod对象；接下来，此事件被Scheduler发现，它立即执行一个复杂的调度流程，为这个新Pod选定一个落户的Node，这个过程可称为绑定；随后模板Node上运行的Kubelet进程通过API Server监测到这个“新生的”Pod并按照它的定义，启动Pod并负责后期的管理；随后我们通过Kubectl提交一个映射到该Pod的Server的创建请求，Controller Manager会通过Label标签查询到相关联的Pod实例，然后生成Service的Endpoints信息；接下来，所有Node上运行的Proxy进程通过API Server查询并监听Service对象及其对应的Endpoints信息，建立一个负载均衡器来实现Service访问到后端Pod的流量转发功能；
 
 
