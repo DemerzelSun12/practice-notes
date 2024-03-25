@@ -1,3 +1,5 @@
+[TOC]
+
 ## 1.  MySQL中myisam与innodb的区别?
 
 * InnoDB支持事物，而MyISAM不支持事物
@@ -28,7 +30,7 @@
 - Read committed(读已提交)：可避免脏读的发生。
 - Read uncommitted(读未提交)：最低级别，任何情况都无法保证。
 
-在 MySQL 数据库中，支持上面四种隔离级别，默认的为 Repeatable read (可重复读)；而在 Oracle 数据库中，只支持 Serializable (串行化)级别和 Read committed (读已提交)这两种级别，其中默认的为 Read committed 级别。##
+在 MySQL 数据库中，支持上面四种隔离级别，默认的为 Repeatable read (可重复读)；而在 Oracle 数据库中，只支持 Serializable (串行化)级别和 Read committed (读已提交)这两种级别，其中默认的为 Read committed 级别。
 
 ## 5. 索引是什么？
 

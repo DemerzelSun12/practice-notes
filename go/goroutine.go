@@ -102,43 +102,126 @@
 ////	fmt.Println("return", test())
 ////}
 
+//package main
+//
+//import "fmt"
+//
+//func main() {
+//	chanNum := 26
+//	chanQueue := make([]chan struct{}, chanNum)
+//	var result = 0
+//	exitChan := make(chan struct{})
+//	for i := 0; i < chanNum; i++ {
+//		chanQueue[i] = make(chan struct{})
+//		if i == chanNum-1 {
+//			go func(i int) {
+//				chanQueue[i] <- struct{}{}
+//			}(i)
+//		}
+//	}
+//	for i := 0; i < chanNum; i++ {
+//		var lastChan, curChan chan struct{}
+//		if i == 0 {
+//			lastChan = chanQueue[chanNum-1]
+//		} else {
+//			lastChan = chanQueue[i-1]
+//		}
+//		curChan = chanQueue[i]
+//		go func(i byte, lastChan, curChan chan struct{}) {
+//			for {
+//				if result > 26 {
+//					exitChan <- struct{}{}
+//				}
+//				<-lastChan
+//				fmt.Printf("%c\n", i)
+//				result++
+//				curChan <- struct{}{}
+//			}
+//		}('A'+byte(i), lastChan, curChan)
+//	}
+//	<-exitChan
+//	fmt.Println("done")
+//}
+
+//package main
+//
+//import (
+//	"fmt"
+//	"sync"
+//)
+//
+//const (
+//	MAX     = 100000
+//	GoCount = 5
+//)
+//
+//func main() {
+//	solution(MAX, GoCount)
+//}
+//
+//func solution(max, goCount int) *[]int {
+//	lock := sync.Mutex{}
+//	wg := sync.WaitGroup{}
+//	result := make([]int, 0, MAX)
+//	count := 1
+//	wg.Add(GoCount)
+//	for i := 0; i < goCount; i++ {
+//		go func(i int) {
+//			for {
+//				lock.Lock()
+//				now := count
+//				lock.Unlock()
+//				if now > max {
+//					wg.Done()
+//					return
+//				}
+//				if now%goCount == i {
+//					fmt.Println(now)
+//					result = append(result, now)
+//					count++
+//				}
+//			}
+//		}(i)
+//	}
+//	wg.Wait()
+//	return &result
+//}
+
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
+
+const (
+	N      = 3
+	MAXNUM = 100
+)
 
 func main() {
-	chanNum := 26
-	chanQueue := make([]chan struct{}, chanNum)
-	var result = 0
-	exitChan := make(chan struct{})
-	for i := 0; i < chanNum; i++ {
-		chanQueue[i] = make(chan struct{})
-		if i == chanNum-1 {
-			go func(i int) {
-				chanQueue[i] <- struct{}{}
-			}(i)
-		}
+	var channels []chan struct{}
+	for i := 0; i < N; i++ {
+		channels = append(channels, make(chan struct{}, 1))
 	}
-	for i := 0; i < chanNum; i++ {
-		var lastChan, curChan chan struct{}
-		if i == 0 {
-			lastChan = chanQueue[chanNum-1]
-		} else {
-			lastChan = chanQueue[i-1]
-		}
-		curChan = chanQueue[i]
-		go func(i byte, lastChan, curChan chan struct{}) {
+	count := 0
+	for i := 0; i < N; i++ {
+		num := i
+		go func() {
 			for {
-				if result > 26 {
-					exitChan <- struct{}{}
+				select {
+				case <-channels[num]:
+					if count > MAXNUM {
+						return
+					}
+					fmt.Printf("%c", rune('A'+num))
+					count++
+					time.Sleep(time.Millisecond * 300)
+					channels[(num+1)%N] <- struct{}{}
 				}
-				<-lastChan
-				fmt.Printf("%c\n", i)
-				result++
-				curChan <- struct{}{}
 			}
-		}('A'+byte(i), lastChan, curChan)
+		}()
 	}
-	<-exitChan
-	fmt.Println("done")
+	channels[0] <- struct{}{}
+	select {}
 }
