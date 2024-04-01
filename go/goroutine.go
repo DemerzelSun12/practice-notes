@@ -187,41 +187,114 @@
 //	return &result
 //}
 
+//package main
+//
+//import (
+//	"fmt"
+//	"time"
+//)
+//
+//const (
+//	N      = 3
+//	MAXNUM = 100
+//)
+//
+//func main() {
+//	var channels []chan struct{}
+//	for i := 0; i < N; i++ {
+//		channels = append(channels, make(chan struct{}, 1))
+//	}
+//	count := 0
+//	for i := 0; i < N; i++ {
+//		num := i
+//		go func() {
+//			for {
+//				select {
+//				case <-channels[num]:
+//					if count > MAXNUM {
+//						return
+//					}
+//					fmt.Printf("%c", rune('A'+num))
+//					count++
+//					time.Sleep(time.Millisecond * 300)
+//					channels[(num+1)%N] <- struct{}{}
+//				}
+//			}
+//		}()
+//	}
+//	channels[0] <- struct{}{}
+//	select {}
+//}
+
+//
+
 package main
 
 import (
+	"bufio"
+	"container/list"
 	"fmt"
-	"time"
-)
-
-const (
-	N      = 3
-	MAXNUM = 100
+	"os"
+	"sort"
 )
 
 func main() {
-	var channels []chan struct{}
-	for i := 0; i < N; i++ {
-		channels = append(channels, make(chan struct{}, 1))
-	}
-	count := 0
-	for i := 0; i < N; i++ {
-		num := i
-		go func() {
-			for {
-				select {
-				case <-channels[num]:
-					if count > MAXNUM {
-						return
-					}
-					fmt.Printf("%c", rune('A'+num))
-					count++
-					time.Sleep(time.Millisecond * 300)
-					channels[(num+1)%N] <- struct{}{}
+	var n, m, q int
+	fmt.Scanf("%d %d %d", &n, &m, &q)
+
+	queue := list.New()                   // 创建一个新的队列
+	buyers := make(map[string]int)        // 创建一个map来记录每个人购买的抽赏数量
+	scanner := bufio.NewScanner(os.Stdin) // 创建scanner读取输入
+	for i := 0; i < q; i++ {
+		scanner.Scan()
+		line := scanner.Text()
+		var op int
+		fmt.Sscanf(line, "%d", &op)
+		switch op {
+		case 1:
+			var name string
+			fmt.Sscanf(line, "%d %s", &op, &name)
+			queue.PushBack(name) // 将名字加入队列末尾
+			if _, exists := buyers[name]; !exists {
+				buyers[name] = 0 // 初始化购买数量为0
+			}
+		case 2:
+			var name string
+			fmt.Sscanf(line, "%d %s", &op, &name)
+			for e := queue.Front(); e != nil; e = e.Next() {
+				if e.Value == name {
+					queue.Remove(e) // 移除队列中的名字
+					break
 				}
 			}
-		}()
+		case 3:
+			var x int
+			fmt.Sscanf(line, "%d %d", &op, &x)
+			if queue.Len() > 0 {
+				name := queue.Remove(queue.Front()).(string) // 移除并返回队列最前面的名字
+				buyers[name] += x
+				n -= x
+				if n <= m { // 检查是否触发特殊规则
+					if queue.Len() > 0 {
+						name := queue.Remove(queue.Front()).(string)
+						buyers[name] += n
+					}
+					n = 0
+					queue.Init() // 清空队列
+				}
+			}
+		case 4:
+			fmt.Println(queue.Len()) // 输出队列中的人数
+		}
 	}
-	channels[0] <- struct{}{}
-	select {}
+
+	// 输出购买详情
+	var names []string
+	for name := range buyers {
+		names = append(names, name)
+	}
+	sort.Strings(names) // 按字典序排序名字
+	for _, name := range names {
+		fmt.Printf("%s %d\n", name, buyers[name])
+	}
 }
